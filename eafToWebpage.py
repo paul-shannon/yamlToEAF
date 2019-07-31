@@ -9,14 +9,17 @@ import pdb
 #----------------------------------------------------------------------------------------------------
 pd.set_option('display.width', 1000)
 #----------------------------------------------------------------------------------------------------
-audioFilename = "harryMosesHowDaylightWasStolen.wav"
-elanXmlFilename="daylight.eaf"
-audioPhrasesTargetDirectory = "audio"
+if(len(sys.argv) != 7):
+    print("usage: eafToWepabe.py <eafFile>  <soundFile>  <audioPhrasesTargetDirectory> <tierGuideFile.yaml> <grammaticalTermsFile> <projectDirectory>")
+    sys.exit(0)
 
-soundFile = os.path.join(audioPhrasesTargetDirectory, audioFilename)
-projectDirectory="./"
-tierGuideFile="tierGuide.yaml"
-grammaticalTermsFile="grammaticalTerms.txt"
+elanXmlFilename= sys.argv[1]
+soundFile = sys.argv[2] 
+audioPhrasesTargetDirectory = sys.argv[3]
+
+tierGuideFile = sys.argv[4]
+grammaticalTermsFile = sys.argv[5]
+projectDirectory = sys.argv[6]
 
 assert(os.path.isfile(soundFile))
 assert(os.path.isfile(elanXmlFilename))
@@ -26,12 +29,14 @@ assert(os.path.isdir(projectDirectory))
 assert(os.path.isfile(tierGuideFile))
 assert(os.path.isfile(grammaticalTermsFile))
 
+# todo (31 jul 2019): pass audioPhrasesTargetDirectory to Text, so that its toHTML method can
+# todo (31 jul 2019): use it, rather than currently hard-coded "audio/".
+
 text = Text(elanXmlFilename,
 	    soundFile,
 	    grammaticalTermsFile=grammaticalTermsFile,
 	    tierGuideFile=tierGuideFile,
 	    projectDirectory=projectDirectory)
-	    #startStopTable=times)
 
 htmlText = text.toHTML()
 filename = "daylight.html"
