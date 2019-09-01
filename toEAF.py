@@ -47,6 +47,9 @@ refMap = []
 
 x = yaml.load(open(yamlFile))
 
+tierMap = yaml.load(open("tierGuide.yaml"))
+print(tierMap)
+
 root = Element('ANNOTATION_DOCUMENT')
 root.set('VERSION', '2.8')
 root.set('FORMAT', '2.8')
@@ -94,9 +97,9 @@ for i in range(lineCount):   # create refMap entry for each line in the text
 for tierName in tierNames:
    tier = SubElement(root, "TIER")
    tier.set("DEFAULT_LOCALE", "tr")   # not sure what "tr" means
-   #if(tierName.lower().find("speech") >= 0):
    print("tierName: %s" % tierName)
-   if(tierName == "lushootseedSpeech"):
+
+   if(tierName == tierMap["speech"]):
        tier.set("LINGUISTIC_TYPE_REF", "speech")
        tier.set("TIER_ID", tierName)
        speechLines = [line[tierName] for line in x["lines"]]
@@ -105,7 +108,7 @@ for tierName in tierNames:
            annotation = SubElement(tier, "ANNOTATION")
            alignableAnnotation = SubElement(annotation, "ALIGNABLE_ANNOTATION")
            alignableAnnotation.set("ANNOTATION_ID", "a%d" % (documentElementID + 1))
-           refMap[lineNumber]["lushootseedSpeech"] = documentElementID + 1
+           refMap[lineNumber][tierName] = documentElementID + 1
            documentElementID += 1
            #pdb.set_trace()
            startTime = x["lines"][lineNumber]["startTime"]
@@ -117,10 +120,10 @@ for tierName in tierNames:
            annotationValue = SubElement(alignableAnnotation, "ANNOTATION_VALUE")
            annotationValue.text = speechLine
            lineNumber += 1
-   if(tierName == "tabDelimitedPhonemes"):
+   if(tierName == tierMap["morpheme"]):
        #pdb.set_trace()
        tier.set("LINGUISTIC_TYPE_REF", "phonemes")
-       tier.set("PARENT_REF", "lushootseedSpeech")
+       tier.set("PARENT_REF", tierMap["speech"])
        tier.set("TIER_ID", tierName)
        phonemeLines = [line[tierName] for line in x["lines"]]
        lineNumber = 0
@@ -128,8 +131,8 @@ for tierName in tierNames:
            annotation = SubElement(tier, "ANNOTATION")
            refAnnotation = SubElement(annotation, "REF_ANNOTATION")
            refAnnotation.set("ANNOTATION_ID", "a%d" % (documentElementID + 1))
-           refMap[lineNumber]["tabDelimitedPhonemes"] = documentElementID + 1
-           refAnnotation.set("ANNOTATION_REF", "a%d" % refMap[lineNumber]["lushootseedSpeech"])
+           refMap[lineNumber][tierName] = documentElementID + 1
+           refAnnotation.set("ANNOTATION_REF", "a%d" % refMap[lineNumber][tierMap["speech"]])
            documentElementID += 1
            annotationValue = SubElement(refAnnotation, "ANNOTATION_VALUE")
            tabDelimitedString = ""
@@ -142,9 +145,9 @@ for tierName in tierNames:
               tabDelimitedString += phonemeLine[i+1]
            annotationValue.text = tabDelimitedString
            lineNumber += 1
-   if(tierName == "tabDelimitedPhonemeGloss"):
+   if(tierName == tierMap["morphemeGloss"]):
        tier.set("LINGUISTIC_TYPE_REF", "phonemeGloss")
-       tier.set("PARENT_REF", "tabDelimitedPhonemes")
+       tier.set("PARENT_REF", tierMap["morpheme"])
        tier.set("TIER_ID", tierName)
        phonemeGlossLines = [line[tierName] for line in x["lines"]]
        lineNumber = 0
@@ -152,8 +155,8 @@ for tierName in tierNames:
            annotation = SubElement(tier, "ANNOTATION")
            refAnnotation = SubElement(annotation, "REF_ANNOTATION")
            refAnnotation.set("ANNOTATION_ID", "a%d" % (documentElementID + 1))
-           refMap[lineNumber]["tabDelimitedPhonemeGloss"] = documentElementID + 1
-           refAnnotation.set("ANNOTATION_REF", "a%d" % refMap[lineNumber]["tabDelimitedPhonemes"])
+           refMap[lineNumber][tierName] = documentElementID + 1
+           refAnnotation.set("ANNOTATION_REF", "a%d" % refMap[lineNumber][tierMap["morpheme"]])
            documentElementID += 1
            annotationValue = SubElement(refAnnotation, "ANNOTATION_VALUE")
            tabDelimitedString = ""
@@ -164,24 +167,24 @@ for tierName in tierNames:
               for i in range(len(phonemeGlossLine) - 1):
                  tabDelimitedString += "%s\t" % phonemeGlossLine[i]
               tabDelimitedString += phonemeGlossLine[i+1]
-           #pdb.set_trace()
            annotationValue.text = tabDelimitedString
            lineNumber += 1
-   if(tierName == "englishTranslation"):
-       tier.set("LINGUISTIC_TYPE_REF", "englishTranslation")
-       tier.set("PARENT_REF", "lushootseedSpeech")
+   if(tierName == tierMap["translation"]):
+       tier.set("LINGUISTIC_TYPE_REF", tierName)
+       #tier.set("LINGUISTIC_TYPE_REF", "englishTranslation")
+       tier.set("PARENT_REF", tierMap["speech"])
        tier.set("TIER_ID", tierName)
-       englishTranslationLines = [line[tierName] for line in x["lines"]]
+       translationLines = [line[tierName] for line in x["lines"]]
        lineNumber = 0
-       for englishTranslationLine in englishTranslationLines:
+       for translationLine in translationLines:
            annotation = SubElement(tier, "ANNOTATION")
            refAnnotation = SubElement(annotation, "REF_ANNOTATION")
            refAnnotation.set("ANNOTATION_ID", "a%d" % (documentElementID + 1))
-           refMap[lineNumber]["englishTranslation"] = documentElementID + 1
-           refAnnotation.set("ANNOTATION_REF", "a%d" % refMap[lineNumber]["lushootseedSpeech"])
+           refMap[lineNumber][tierName] = documentElementID + 1
+           refAnnotation.set("ANNOTATION_REF", "a%d" % refMap[lineNumber][tierMap["speech"]])
            documentElementID += 1
            annotationValue = SubElement(refAnnotation, "ANNOTATION_VALUE")
-           annotationValue.text = englishTranslationLine
+           annotationValue.text = translationLine
            lineNumber += 1
 
 
@@ -198,7 +201,7 @@ linguisticType.set("LINGUISTIC_TYPE_ID", "phonemeGloss")
 linguisticType.set("TIME_ALIGNABLE", "false")
 
 linguisticType = SubElement(root, "LINGUISTIC_TYPE")
-linguisticType.set("LINGUISTIC_TYPE_ID", "englishTranslation")
+linguisticType.set("LINGUISTIC_TYPE_ID", tierMap["translation"])
 linguisticType.set("TIME_ALIGNABLE", "false")
 
 xmlstr = minidom.parseString(etree.ElementTree.tostring(root)).toprettyxml(indent = "   ")
