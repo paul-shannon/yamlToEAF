@@ -9,8 +9,8 @@ import pdb
 #----------------------------------------------------------------------------------------------------
 pd.set_option('display.width', 1000)
 #----------------------------------------------------------------------------------------------------
-if(len(sys.argv) != 7):
-    print("usage: eafToWepabe.py <eafFile>  <soundFile>  <audioPhrasesTargetDirectory> <tierGuideFile.yaml> <grammaticalTermsFile> <projectDirectory>")
+if(len(sys.argv) != 8):
+    print("usage: eafToWepage.py <eafFile>  <soundFile>  <audioPhrasesTargetDirectory> <tierGuideFile.yaml> <grammaticalTermsFile> <projectDirectory> <htmlFile")
     sys.exit(0)
 
 elanXmlFilename= sys.argv[1]
@@ -20,6 +20,7 @@ audioPhrasesTargetDirectory = sys.argv[3]
 tierGuideFile = sys.argv[4]
 grammaticalTermsFile = sys.argv[5]
 projectDirectory = sys.argv[6]
+htmlFile = sys.argv[7]
 
 assert(os.path.isfile(soundFile))
 assert(os.path.isfile(elanXmlFilename))
@@ -39,7 +40,7 @@ text = Text(elanXmlFilename,
 	    projectDirectory=projectDirectory)
 
 htmlText = text.toHTML()
-filename = "daylight.html"
+filename = htmlFile
 f = open(filename, "w")
 f.write(indent(htmlText))
 f.close()

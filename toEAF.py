@@ -24,12 +24,14 @@ xmlFilename = "%s.eaf" % baseName
 schemaXSD = "http://www.mpi.nl/tools/elan/EAFv3.0.xsd"
 schema = xmlschema.XMLSchema(schemaXSD)
 
-# "elements" are all the nodes in the xml document we create here, for instance speech, phonemes, phonemeGlosses, translation
-# in a classic text, there will be an equal number of each element type: maybe 20 speech elements, 20 phoneme elements (each a
-# set of tab-delemited phonemes), 20 phonemGlosses (also tab-delmited sets), 20 translations.
+# "elements" are all the nodes in the xml document we create here, for instance speech, morphemes,
+# morphemeGlosses, translation in a classic text, there will be an equal number of each element
+# type: maybe 20 speech elements, 20 morpheme elements (each a set of tab-delemited morphemes), 20
+# morphemeGlosses (also tab-delmited sets), 20 translations.
+# 
 # in eaf xml, each kind of element is separated, gathered together in sequence:  there is a tier of speech elements,
-# a tier of tab-delimited phoneme set elements; same for phonemeGlosses and translations.
-# the relationship between, for example, a speech element and its phoneme set is explicit in our yaml schema: they are
+# a tier of tab-delimited morpheme set elements; same for morphemeGlosses and translations.
+# the relationship between, for example, a speech element and its morpheme set is explicit in our yaml schema: they are
 # nested together in a line
 # for eaf xml, however, we must provide explicit links tying related elements together.
 # the eaf mechanism for doing this is
@@ -37,7 +39,7 @@ schema = xmlschema.XMLSchema(schemaXSD)
 #   for each dependent element (everything except for time-aligned speech elements), also specify
 #   an ANNOTATION_REF - which points back to the parent element:
 #      ANNOTATION_ID        ANNOTATION_REF
-#      phoneme set          speech
+#      morpheme set          speech
 #      phonemicGloss set    phonemic set
 #      translation          speech
 # the refMap data structure records these ID/elementType/line relationships as they are dynamically
@@ -122,12 +124,12 @@ for tierName in tierNames:
            lineNumber += 1
    if(tierName == tierMap["morpheme"]):
        #pdb.set_trace()
-       tier.set("LINGUISTIC_TYPE_REF", "phonemes")
+       tier.set("LINGUISTIC_TYPE_REF", "morphemes")
        tier.set("PARENT_REF", tierMap["speech"])
        tier.set("TIER_ID", tierName)
-       phonemeLines = [line[tierName] for line in x["lines"]]
+       morphemeLines = [line[tierName] for line in x["lines"]]
        lineNumber = 0
-       for phonemeLine in phonemeLines:
+       for morphemeLine in morphemeLines:
            annotation = SubElement(tier, "ANNOTATION")
            refAnnotation = SubElement(annotation, "REF_ANNOTATION")
            refAnnotation.set("ANNOTATION_ID", "a%d" % (documentElementID + 1))
@@ -136,22 +138,24 @@ for tierName in tierNames:
            documentElementID += 1
            annotationValue = SubElement(refAnnotation, "ANNOTATION_VALUE")
            tabDelimitedString = ""
-           phonemeCount = len(phonemeLine)
-           if(phonemeCount == 1):
-              tabDelimitedString = phonemeLine[0]
+           morphemeCount = len(morphemeLine)
+           if(morphemeCount == 0):
+              tabDelimitedString = "";
+           elif(morphemeCount == 1):
+              tabDelimitedString = morphemeLine[0]
            else:
-              for i in range(len(phonemeLine) - 1):
-                  tabDelimitedString += "%s\t" % phonemeLine[i]
-              tabDelimitedString += phonemeLine[i+1]
+              for i in range(len(morphemeLine) - 1):
+                  tabDelimitedString += "%s\t" % morphemeLine[i]
+              tabDelimitedString += morphemeLine[i+1]
            annotationValue.text = tabDelimitedString
            lineNumber += 1
    if(tierName == tierMap["morphemeGloss"]):
-       tier.set("LINGUISTIC_TYPE_REF", "phonemeGloss")
+       tier.set("LINGUISTIC_TYPE_REF", "morphemeGloss")
        tier.set("PARENT_REF", tierMap["morpheme"])
        tier.set("TIER_ID", tierName)
-       phonemeGlossLines = [line[tierName] for line in x["lines"]]
+       morphemeGlossLines = [line[tierName] for line in x["lines"]]
        lineNumber = 0
-       for phonemeGlossLine in phonemeGlossLines:
+       for morphemeGlossLine in morphemeGlossLines:
            annotation = SubElement(tier, "ANNOTATION")
            refAnnotation = SubElement(annotation, "REF_ANNOTATION")
            refAnnotation.set("ANNOTATION_ID", "a%d" % (documentElementID + 1))
@@ -160,13 +164,15 @@ for tierName in tierNames:
            documentElementID += 1
            annotationValue = SubElement(refAnnotation, "ANNOTATION_VALUE")
            tabDelimitedString = ""
-           phonemeGlossCount = len(phonemeGlossLine)
-           if(phonemeGlossCount == 1):
-              tabDelimitedString = phonemeGlossLine[0]
+           morphemeGlossCount = len(morphemeGlossLine)
+           if(morphemeGlossCount == 0):
+              tabDelimitedString = "";
+           elif(morphemeGlossCount == 1):
+              tabDelimitedString = morphemeGlossLine[0]
            else:
-              for i in range(len(phonemeGlossLine) - 1):
-                 tabDelimitedString += "%s\t" % phonemeGlossLine[i]
-              tabDelimitedString += phonemeGlossLine[i+1]
+              for i in range(len(morphemeGlossLine) - 1):
+                 tabDelimitedString += "%s\t" % morphemeGlossLine[i]
+              tabDelimitedString += morphemeGlossLine[i+1]
            annotationValue.text = tabDelimitedString
            lineNumber += 1
    if(tierName == tierMap["translation"]):
@@ -193,11 +199,11 @@ linguisticType.set("LINGUISTIC_TYPE_ID", "speech")
 linguisticType.set("TIME_ALIGNABLE", "true")
 
 linguisticType = SubElement(root, "LINGUISTIC_TYPE")
-linguisticType.set("LINGUISTIC_TYPE_ID", "phonemes")
+linguisticType.set("LINGUISTIC_TYPE_ID", "morphemes")
 linguisticType.set("TIME_ALIGNABLE", "false")
 
 linguisticType = SubElement(root, "LINGUISTIC_TYPE")
-linguisticType.set("LINGUISTIC_TYPE_ID", "phonemeGloss")
+linguisticType.set("LINGUISTIC_TYPE_ID", "morphemeGloss")
 linguisticType.set("TIME_ALIGNABLE", "false")
 
 linguisticType = SubElement(root, "LINGUISTIC_TYPE")
