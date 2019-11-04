@@ -22,6 +22,8 @@ grammaticalTermsFile = sys.argv[5]
 projectDirectory = sys.argv[6]
 htmlFile = sys.argv[7]
 
+htmlOutputFile = sys.argv[7]
+
 assert(os.path.isfile(soundFile))
 assert(os.path.isfile(elanXmlFilename))
 assert(os.path.isdir(audioPhrasesTargetDirectory))
@@ -46,4 +48,4 @@ f.write(indent(htmlText))
 f.close()
 display = True
 if(display):
-    os.system("open %s" % filename)
+    os.system("open %s" % htmlOutputFile)
