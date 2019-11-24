@@ -46,6 +46,6 @@ filename = htmlFile
 f = open(filename, "w")
 f.write(indent(htmlText))
 f.close()
-display = True
+display = False
 if(display):
     os.system("open %s" % htmlOutputFile)
