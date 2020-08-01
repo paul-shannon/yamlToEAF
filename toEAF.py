@@ -47,9 +47,9 @@ schema = xmlschema.XMLSchema(schemaXSD)
 
 refMap = []
 
-x = yaml.load(open(yamlFile))
+x = yaml.load(open(yamlFile), Loader=yaml.FullLoader)
 
-tierMap = yaml.load(open("tierGuide.yaml"))
+tierMap = yaml.load(open("tierGuide.yaml"), Loader=yaml.FullLoader)
 print(tierMap)
 
 root = Element('ANNOTATION_DOCUMENT')
