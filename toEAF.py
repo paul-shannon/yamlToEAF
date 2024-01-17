@@ -49,6 +49,35 @@ refMap = []
 
 x = yaml.load(open(yamlFile), Loader=yaml.FullLoader)
 
+   # traverse the lines, looking for zero endTime values
+   # by convention, these are reassigned to be a few msecs
+   # earlier then the folloging line's startTime
+   # the last line is a special case.  we require its endTime to
+   # be provided
+
+lineCount = len(x["lines"])
+lastTimeInFile = x["lines"][lineCount - 1]["endTime"]
+if(lastTimeInFile == 0):
+    print()
+    print("  toEAF.py found time error")
+    print("  last endTime must be specified, cannot be inferred from a following line.")
+    print("  but found a zero")
+    print()
+    sys.exit()
+    
+for i in range(lineCount):
+    if x["lines"][i]['endTime'] == 0:
+       x["lines"][i]['endTime'] = x["lines"][i+1]["startTime"] - 10
+    print("%03d)  %8d  %8d" % (i, x["lines"][i]["startTime"], x["lines"][i]["endTime"]))
+
+title = x["title"]
+narrator = x["narrator"]
+textEntry = x["textEntry"]
+mediaFile = x["mediaFile"]
+mimeType = x["mimeType"]
+lineCount = len(x["lines"])
+
+
 tierMap = yaml.load(open("tierGuide.yaml"), Loader=yaml.FullLoader)
 print(tierMap)
 
@@ -65,16 +94,15 @@ header.set("MEDIA_FILE", "")
 header.set("TIME_UNITS", "milliseconds")
 
 mediaDescriptor = SubElement(header, 'MEDIA_DESCRIPTOR')
-mediaDescriptor.set('MEDIA_URL', "file:///Users/paul/github/slexil/explorations/generateEAF/pythonDemos/daylight1/daylight_1_9.wav")
-mediaDescriptor.set('MIME_TYPE', "audio/x-wav")
-mediaDescriptor.set('RELATIVE_MEDIA_URL', "file://./daylight_1_9.wav")
-property = SubElement(header, "PROPERTY")
-property.set('NAME', "lastUsedAnnotationId")
-property.text = '340'
+mediaDescriptor.set('MEDIA_URL', mediaFile)
+mediaDescriptor.set('MIME_TYPE', mimeType)
+# mediaDescriptor.set('RELATIVE_MEDIA_URL', "file://./daylight_1_9.wav")
+# property = SubElement(header, "PROPERTY")
+# property.set('NAME', "lastUsedAnnotationId")
+# property.text = '340'
 
 timeOrder = SubElement(root, "TIME_ORDER")
 
-lineCount = len(x["lines"])
 
 startTimes = [line["startTime"] for line in x["lines"]]
 endTimes = [line["endTime"] for line in x["lines"]]
@@ -112,9 +140,9 @@ for tierName in tierNames:
            alignableAnnotation.set("ANNOTATION_ID", "a%d" % (documentElementID + 1))
            refMap[lineNumber][tierName] = documentElementID + 1
            documentElementID += 1
-           #pdb.set_trace()
            startTime = x["lines"][lineNumber]["startTime"]
            endTime   = x["lines"][lineNumber]["endTime"]
+           #pdb.set_trace()
            startTimeIndex = allTimes.index(startTime)
            endTimeIndex = allTimes.index(endTime)
            alignableAnnotation.set("TIME_SLOT_REF1", "ts%d" % startTimeIndex)
@@ -122,7 +150,8 @@ for tierName in tierNames:
            annotationValue = SubElement(alignableAnnotation, "ANNOTATION_VALUE")
            annotationValue.text = speechLine
            lineNumber += 1
-   if(tierName == tierMap["morpheme"]):
+
+   if("morpheme" in tierMap.keys() and tierName == tierMap["morpheme"]):
        #pdb.set_trace()
        tier.set("LINGUISTIC_TYPE_REF", "morphemes")
        tier.set("PARENT_REF", tierMap["speech"])
@@ -149,13 +178,14 @@ for tierName in tierNames:
               tabDelimitedString += morphemeLine[i+1]
            annotationValue.text = tabDelimitedString
            lineNumber += 1
-   if(tierName == tierMap["morphemeGloss"]):
+   if("morphemeGloss" in tierMap.keys() and tierName == tierMap["morphemeGloss"]):
        tier.set("LINGUISTIC_TYPE_REF", "morphemeGloss")
        tier.set("PARENT_REF", tierMap["morpheme"])
        tier.set("TIER_ID", tierName)
        morphemeGlossLines = [line[tierName] for line in x["lines"]]
        lineNumber = 0
        for morphemeGlossLine in morphemeGlossLines:
+           # print(morphemeGlossLine)
            annotation = SubElement(tier, "ANNOTATION")
            refAnnotation = SubElement(annotation, "REF_ANNOTATION")
            refAnnotation.set("ANNOTATION_ID", "a%d" % (documentElementID + 1))
@@ -175,7 +205,7 @@ for tierName in tierNames:
               tabDelimitedString += morphemeGlossLine[i+1]
            annotationValue.text = tabDelimitedString
            lineNumber += 1
-   if(tierName == tierMap["translation"]):
+   if("translation" in tierMap.keys() and tierName == tierMap["translation"]):
        tier.set("LINGUISTIC_TYPE_REF", tierName)
        #tier.set("LINGUISTIC_TYPE_REF", "englishTranslation")
        tier.set("PARENT_REF", tierMap["speech"])
@@ -198,17 +228,28 @@ linguisticType = SubElement(root, "LINGUISTIC_TYPE")
 linguisticType.set("LINGUISTIC_TYPE_ID", "speech")
 linguisticType.set("TIME_ALIGNABLE", "true")
 
-linguisticType = SubElement(root, "LINGUISTIC_TYPE")
-linguisticType.set("LINGUISTIC_TYPE_ID", "morphemes")
-linguisticType.set("TIME_ALIGNABLE", "false")
+if("morpheme" in tierMap.keys()):
+   linguisticType = SubElement(root, "LINGUISTIC_TYPE")
+   linguisticType.set("LINGUISTIC_TYPE_ID", "morphemes")
+   linguisticType.set("TIME_ALIGNABLE", "false")
 
-linguisticType = SubElement(root, "LINGUISTIC_TYPE")
-linguisticType.set("LINGUISTIC_TYPE_ID", "morphemeGloss")
-linguisticType.set("TIME_ALIGNABLE", "false")
+if("morphemeGloss" in tierMap.keys()):
+   linguisticType = SubElement(root, "LINGUISTIC_TYPE")
+   linguisticType.set("LINGUISTIC_TYPE_ID", "morphemeGloss")
+   linguisticType.set("TIME_ALIGNABLE", "false")
 
-linguisticType = SubElement(root, "LINGUISTIC_TYPE")
-linguisticType.set("LINGUISTIC_TYPE_ID", tierMap["translation"])
-linguisticType.set("TIME_ALIGNABLE", "false")
+if("translation" in tierMap.keys()):
+   linguisticType = SubElement(root, "LINGUISTIC_TYPE")
+   linguisticType.set("LINGUISTIC_TYPE_ID", tierMap["translation"])
+   linguisticType.set("TIME_ALIGNABLE", "false")
+
+localeElement = SubElement(root, "LOCALE")
+localeElement.set("LANGUAGE_CODE", "tr")
+localeElement.set("VARIANT", "STANDARD")
+
+localeElement = SubElement(root, "LOCALE")
+localeElement.set("LANGUAGE_CODE", "en")
+localeElement.set("VARIANT", "ASCII")
 
 xmlstr = minidom.parseString(etree.ElementTree.tostring(root)).toprettyxml(indent = "   ")
 #print(xmlstr)
