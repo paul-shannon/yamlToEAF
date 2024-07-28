@@ -152,7 +152,6 @@ for tierName in tierNames:
            lineNumber += 1
 
    elif("morpheme" in tierMap.keys() and tierName == tierMap["morpheme"]):
-       #pdb.set_trace()
        tier.set("LINGUISTIC_TYPE_REF", "morphemes")
        tier.set("PARENT_REF", tierMap["speech"])
        tier.set("TIER_ID", tierName)
@@ -267,7 +266,6 @@ for otherTier in otherTiers:
    linguisticType.set("LINGUISTIC_TYPE_ID", tierMap[otherTier])
    linguisticType.set("TIME_ALIGNABLE", "false")
 
-# pdb.set_trace()
 
 localeElement = SubElement(root, "LOCALE")
 localeElement.set("LANGUAGE_CODE", "tr")
@@ -277,7 +275,6 @@ localeElement = SubElement(root, "LOCALE")
 localeElement.set("LANGUAGE_CODE", "en")
 localeElement.set("VARIANT", "ASCII")
 
-pdb.set_trace()
 xmlstr = minidom.parseString(etree.ElementTree.tostring(root)).toprettyxml(indent = "   ")
 #print(xmlstr)
 
