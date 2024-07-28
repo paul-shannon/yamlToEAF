@@ -113,17 +113,18 @@ for i in range(len(allTimes)):
     timeSlot.set("TIME_SLOT_ID", "ts%d" % i)
     timeSlot.set("TIME_VALUE", "%d" % allTimes[i])
 
-
 documentElementID = 0   # unique, a0, a1, ... aN
 
 lineFieldNames = list(x["lines"][0].keys())
-tierNames = lineFieldNames[4:]
+tierNames = lineFieldNames[3:]
 
 for i in range(lineCount):   # create refMap entry for each line in the text
     map = {}
-    for lineFieldName in lineFieldNames[4:]:   # skip lineNumber, lineType, startTime, endTime
+    for lineFieldName in lineFieldNames[3:]:   # skip lineNumber, startTime, endTime
        map[lineFieldName] = -1
     refMap.append(map)
+
+pdb.set_trace()
 
 for tierName in tierNames:
    tier = SubElement(root, "TIER")
@@ -151,7 +152,7 @@ for tierName in tierNames:
            annotationValue.text = speechLine
            lineNumber += 1
 
-   elif("morpheme" in tierMap.keys() and tierName == tierMap["morpheme"]):
+   if("morpheme" in tierMap.keys() and tierName == tierMap["morpheme"]):
        #pdb.set_trace()
        tier.set("LINGUISTIC_TYPE_REF", "morphemes")
        tier.set("PARENT_REF", tierMap["speech"])
@@ -178,7 +179,7 @@ for tierName in tierNames:
               tabDelimitedString += morphemeLine[i+1]
            annotationValue.text = tabDelimitedString
            lineNumber += 1
-   elif("morphemeGloss" in tierMap.keys() and tierName == tierMap["morphemeGloss"]):
+   if("morphemeGloss" in tierMap.keys() and tierName == tierMap["morphemeGloss"]):
        tier.set("LINGUISTIC_TYPE_REF", "morphemeGloss")
        tier.set("PARENT_REF", tierMap["morpheme"])
        tier.set("TIER_ID", tierName)
@@ -205,8 +206,7 @@ for tierName in tierNames:
               tabDelimitedString += morphemeGlossLine[i+1]
            annotationValue.text = tabDelimitedString
            lineNumber += 1
-
-   elif("translation" in tierMap.keys() and tierName == tierMap["translation"]):
+   if("translation" in tierMap.keys() and tierName == tierMap["translation"]):
        tier.set("LINGUISTIC_TYPE_REF", tierName)
        #tier.set("LINGUISTIC_TYPE_REF", "englishTranslation")
        tier.set("PARENT_REF", tierMap["speech"])
@@ -222,22 +222,6 @@ for tierName in tierNames:
            documentElementID += 1
            annotationValue = SubElement(refAnnotation, "ANNOTATION_VALUE")
            annotationValue.text = translationLine
-           lineNumber += 1
-   else:
-       tier.set("LINGUISTIC_TYPE_REF", tierName)
-       tier.set("PARENT_REF", tierMap["speech"])
-       tier.set("TIER_ID", tierName)
-       tierLines = [line[tierName] for line in x["lines"]]
-       lineNumber = 0
-       for line in tierLines:
-           annotation = SubElement(tier, "ANNOTATION")
-           refAnnotation = SubElement(annotation, "REF_ANNOTATION")
-           refAnnotation.set("ANNOTATION_ID", "a%d" % (documentElementID + 1))
-           refMap[lineNumber][tierName] = documentElementID + 1
-           refAnnotation.set("ANNOTATION_REF", "a%d" % refMap[lineNumber][tierMap["speech"]])
-           documentElementID += 1
-           annotationValue = SubElement(refAnnotation, "ANNOTATION_VALUE")
-           annotationValue.text = line
            lineNumber += 1
 
 
@@ -260,15 +244,6 @@ if("translation" in tierMap.keys()):
    linguisticType.set("LINGUISTIC_TYPE_ID", tierMap["translation"])
    linguisticType.set("TIME_ALIGNABLE", "false")
 
-normalTiers = set(['translation', 'speech', 'morpheme', 'morphemeGloss'])
-otherTiers = list(set(tierMap.keys()).difference(normalTiers))
-for otherTier in otherTiers:
-   linguisticType = SubElement(root, "LINGUISTIC_TYPE")
-   linguisticType.set("LINGUISTIC_TYPE_ID", tierMap[otherTier])
-   linguisticType.set("TIME_ALIGNABLE", "false")
-
-# pdb.set_trace()
-
 localeElement = SubElement(root, "LOCALE")
 localeElement.set("LANGUAGE_CODE", "tr")
 localeElement.set("VARIANT", "STANDARD")
@@ -277,7 +252,6 @@ localeElement = SubElement(root, "LOCALE")
 localeElement.set("LANGUAGE_CODE", "en")
 localeElement.set("VARIANT", "ASCII")
 
-pdb.set_trace()
 xmlstr = minidom.parseString(etree.ElementTree.tostring(root)).toprettyxml(indent = "   ")
 #print(xmlstr)
 
